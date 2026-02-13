@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student View - Student Learning System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div class="student-dashboard">
+        <!-- Sidebar / Navigation -->
+        <aside class="sidebar">
+            <div class="logo-area">
+                <i class="fas fa-user-graduate"></i>
+                <h2>Student Portal</h2>
+            </div>
+
+            <nav>
+                <a href="#" class="active"><i class="fas fa-chart-line"></i> Dashboard</a>
+            </nav>
+
+            <div class="logout-area">
+                <a href="/logout" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="top-header">
+                <div class="welcome-text">
+                    {% if user_type == 'admin' %}
+                    <h1>Student Overview</h1>
+                    <p>Analyze performance and manage records.</p>
+                    {% else %}
+                    <h1 style="display: flex; align-items: center; gap: 12px;">
+                        Welcome!
+                    </h1>
+                    <p>Track your academic progress and stability.</p>
+                    {% endif %}
+                </div>
+                <!-- Search Bar in Header -->
+                <div class="header-search">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="studentNameSearch" placeholder="Search by Name or Roll No..."
+                            autocomplete="off">
+                        <div id="nameSuggestions" class="suggestions-list"></div>
+                    </div>
+                </div>
+                <button class="theme-toggle" title="Toggle Dark Mode"
+                    style="position: relative; top: auto; right: auto;">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </header>
+
+            <!-- Dashboard Content -->
+            <div id="dashboardContent" class="dashboard-grid fade-in">
+                <!-- Empty State / Welcome -->
+                <div id="welcomeState" class="welcome-state">
+                    <div class="tips-section">
+                        {% if user_type == 'admin' %}
+                        <!-- Admin Cards -->
+                        <div class="tip-card">
+                            <i class="fas fa-database"></i>
+                            <h4>Monitor Records</h4>
+                            <p>View comprehensive academic data for all students.</p>
+                        </div>
+                        <div class="tip-card">
+                            <i class="fas fa-chart-line"></i>
+                            <h4>Analyze Trends</h4>
+                            <p>Track stability scores to identify performance patterns.</p>
+                        </div>
+                        <div class="tip-card">
+                            <i class="fas fa-user-shield"></i>
+                            <h4>Support Growth</h4>
+                            <p>Identify needs and provide timely interventions.</p>
+                        </div>
+                        {% else %}
+                        <!-- Student Tips -->
+                        <div class="tip-card">
+                            <i class="fas fa-chart-pie"></i>
+                            <h4>Boost Stability</h4>
+                            <p>Your score reflects Tests, Attendance, and Assignments. Consistency is key!</p>
+                        </div>
+                        <div class="tip-card">
+                            <i class="fas fa-calendar-check"></i>
+                            <h4>Stay Engaged</h4>
+                            <p>Submit assignments on time and attend classes regularly to keep your score high.</p>
+                        </div>
+                        <div class="tip-card">
+                            <i class="fas fa-clipboard-list"></i>
+                            <h4>Track Progress</h4>
+                            <p>Check your dashboard weekly. A score below 50% means you need to review your topics.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    {% if user_type == 'admin' %}
+                    <h3>Select a Student</h3>
+                    <p>Use the search bar above to view detailed performance metrics.</p>
+                    {% else %}
+                    <h3>Find Your Records</h3>
+                    <p>Use the search bar above to view your performance metrics.</p>
+                    {% endif %}
+                </div>
+
+                <!-- Results Area (Hidden initially) -->
+                <div id="resultsArea" style="display: none;">
+                    <!-- Title Row -->
+                    <div class="results-header premium-header">
+                        <div class="profile-avatar-premium">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="header-info">
+                            <span class="header-subtitle">Student Profile</span>
+                            <div class="name-row">
+                                <h2 id="studentNameDisplay">Student Name</h2>
+                                <span id="dispCategory" class="category-badge">Category</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stats Cards -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="icon-box blue">
+                                <i class="fas fa-balance-scale"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h4>Stability Score</h4>
+                                <h2 id="dispStability">0</h2>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="icon-box green">
+                                <i class="fas fa-poll"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h4>Test Score</h4>
+                                <h2 id="dispTest">0</h2>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="icon-box purple">
+                                <i class="fas fa-user-clock"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h4>Attendance</h4>
+                                <h2 id="dispAttendance">0</h2>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="icon-box orange">
+                                <i class="fas fa-tasks"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h4>Assignment</h4>
+                                <h2 id="dispAssignment">0</h2>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Subject Breakdown Section -->
+                    <div id="subjectSection" class="chart-section" style="display: none; margin-top: 2rem;">
+                        <div class="header-row">
+                            <h3>Subject Breakdown</h3>
+                        </div>
+                        <div id="subjectBreakdown" class="subjects-grid">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Chart Section -->
+                    <div class="chart-section">
+                        <div class="header-row">
+                            <h3>Performance Trend</h3>
+                            <div id="trendDisplay" class="trend-badge" style="display:none;">
+                                <span id="trendIcon"></span>
+                                <span id="trendText"></span>
+                            </div>
+                        </div>
+                        <p id="trendRecommendation" class="recommendation-text"></p>
+                        <div class="chart-wrapper">
+                            <canvas id="performanceChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Previous Stability Comparison Section -->
+            <div id="comparisonSection" class="history-section" style="display: none;">
+                <h3 class="section-title">Previous Stability Comparison</h3>
+                <div class="history-grid">
+                    <!-- Metrics Column -->
+                    <div class="metrics-column">
+                        <!-- Stability Comparison -->
+                        <div class="comparison-card type-stability">
+                            <div class="comp-header">
+                                <div class="comp-icon-box">
+                                    <i class="fas fa-balance-scale"></i>
+                                </div>
+                                <span>Stability Score</span>
+                            </div>
+                            <div class="comp-body">
+                                <div class="comp-item">
+                                    <small>Previous</small>
+                                    <span id="prevStability">0%</span>
+                                </div>
+                                <div class="comp-divider">
+                                    <i class="fas fa-arrow-right"></i>
+                                </div>
+                                <div class="comp-item highlight">
+                                    <small>Current</small>
+                                    <span id="currStability">0%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Test Score Comparison -->
+                        <div class="comparison-card type-test">
+                            <div class="comp-header">
+                                <div class="comp-icon-box">
+                                    <i class="fas fa-poll"></i>
+                                </div>
+                                <span>Test Score</span>
+                            </div>
+                            <div class="comp-body">
+                                <div class="comp-item">
+                                    <small>Previous</small>
+                                    <span id="prevTest">0%</span>
+                                </div>
+                                <div class="comp-divider">
+                                    <i class="fas fa-arrow-right"></i>
+                                </div>
+                                <div class="comp-item highlight">
+                                    <small>Current</small>
+                                    <span id="currTest">0%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Assignment Comparison -->
+                        <div class="comparison-card type-assignment">
+                            <div class="comp-header">
+                                <div class="comp-icon-box">
+                                    <i class="fas fa-tasks"></i>
+                                </div>
+                                <span>Assignment</span>
+                            </div>
+                            <div class="comp-body">
+                                <div class="comp-item">
+                                    <small>Previous</small>
+                                    <span id="prevAssignment">0%</span>
+                                </div>
+                                <div class="comp-divider">
+                                    <i class="fas fa-arrow-right"></i>
+                                </div>
+                                <div class="comp-item highlight">
+                                    <small>Current</small>
+                                    <span id="currAssignment">0%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chart Column -->
+                    <div class="chart-column">
+                        <div class="chart-wrapper">
+                            <canvas id="comparisonChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </div>
+    <div id="studentMessage" class="message-toast"></div>
+    </main>
+    </div>
+
+    <!-- Hidden ID Search (Fallback) -->
+    <input type="hidden" id="studentSearchId">
+
+    <script>
+        window.currentUser = {
+            type: "{{ user_type }}",
+            id: "{{ user_id }}"
+        };
+    </script>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', initStudent);
+    </script>
+</body>
+
+</html>

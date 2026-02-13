@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Student Learning System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="admin-dashboard">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo-area">
+                <i class="fas fa-graduation-cap"></i>
+                <h2>SLS Admin</h2>
+            </div>
+
+            <nav>
+                <a href="#" id="navDashboard" class="active"><i class="fas fa-th-large"></i> Dashboard</a>
+                <a href="#" id="navAddStudent"><i class="fas fa-user-plus"></i> Add Student</a>
+                <a href="/student"><i class="fas fa-eye"></i> Student View</a>
+            </nav>
+
+            <div class="logout-area">
+                <a href="/logout" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Header -->
+            <header class="top-header">
+                <div class="welcome-text">
+                    <h1>Admin Dashboard</h1>
+                    <p>Manage student records and performance.</p>
+                </div>
+                <button class="theme-toggle" title="Toggle Dark Mode"
+                    style="position: relative; top: auto; right: auto;">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </header>
+
+            <div class="dashboard-grid">
+
+                <!-- VIEW 1: Dashboard Stats & Lists -->
+                <div id="dashboardView" class="view-section">
+                    <!-- Stats Overview -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="icon-box blue">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h4>Total Students</h4>
+                                <h2 id="totalStudents">0</h2>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="icon-box green">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h4>High Stability</h4>
+                                <h2 id="highStabilityCount">0</h2>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="icon-box orange">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h4>Low Stability</h4>
+                                <h2 id="lowStabilityCount">0</h2>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Lists Container -->
+                    <div class="data-lists-container">
+                        <!-- High/Low Stability Lists (Compact) -->
+                        <div class="stability-lists-grid">
+                            <div class="list-card">
+                                <div class="card-header">
+                                    <h4 class="text-success"><i class="fas fa-star"></i> High Stability Students</h4>
+                                </div>
+                                <ul id="highStabilityList" class="scrolling-list">
+                                    <!-- Populated by JS -->
+                                </ul>
+                            </div>
+
+                            <div class="list-card">
+                                <div class="card-header">
+                                    <h4 class="text-danger"><i class="fas fa-exclamation-circle"></i> Low Stability
+                                        Students</h4>
+                                </div>
+                                <ul id="lowStabilityList" class="scrolling-list">
+                                    <!-- Populated by JS -->
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- All Students Table -->
+                        <div class="table-card">
+                            <div class="card-header">
+                                <h3>All Students</h3>
+                                <input type="text" id="tableSearch" placeholder="Search..." class="small-search">
+                            </div>
+                            <div class="table-responsive">
+                                <table id="studentsTable">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Roll No</th>
+                                            <th>Name</th>
+                                            <th>Stability Score</th>
+                                            <th>Trend</th>
+                                            <th>Category</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Populated by JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW 2: Add/Edit Student Form -->
+                <div id="addStudentView" class="view-section" style="display: none;">
+                    <div class="form-container full-width">
+                        <div class="card-header">
+                            <h3><i class="fas fa-user-plus"></i> <span id="formTitle">Add New Student</span></h3>
+                        </div>
+                        <form id="adminForm">
+                            <input type="hidden" id="studentId">
+
+                            <div class="form-grid">
+                                <div class="input-group">
+                                    <label for="rollNo">Roll Number</label>
+                                    <div class="input-wrapper">
+                                        <i class="fas fa-id-badge"></i>
+                                        <input type="text" id="rollNo" required placeholder="Enter roll number">
+                                    </div>
+                                </div>
+
+                                <div class="input-group">
+                                    <label for="name">Student Name</label>
+                                    <div class="input-wrapper">
+                                        <i class="fas fa-user"></i>
+                                        <input type="text" id="name" required placeholder="Enter student name">
+                                    </div>
+                                </div>
+
+                                <div class="input-group full-width">
+                                    <label>Subject Marks (0-100)</label>
+                                    <div class="marks-grid">
+                                        <div class="input-wrapper">
+                                            <span class="input-label">Tamil</span>
+                                            <input type="number" id="tamil" min="0" max="100" required placeholder="0">
+                                        </div>
+                                        <div class="input-wrapper">
+                                            <span class="input-label">English</span>
+                                            <input type="number" id="english" min="0" max="100" required
+                                                placeholder="0">
+                                        </div>
+                                        <div class="input-wrapper">
+                                            <span class="input-label">Maths</span>
+                                            <input type="number" id="maths" min="0" max="100" required placeholder="0">
+                                        </div>
+                                        <div class="input-wrapper">
+                                            <span class="input-label">Science</span>
+                                            <input type="number" id="science" min="0" max="100" required
+                                                placeholder="0">
+                                        </div>
+                                        <div class="input-wrapper">
+                                            <span class="input-label">Social</span>
+                                            <input type="number" id="social" min="0" max="100" required placeholder="0">
+                                        </div>
+                                    </div>
+                                    <input type="hidden" id="testScore"> <!-- Calculated automatically -->
+                                </div>
+
+                                <div class="input-group">
+                                    <label for="attendance">Attendance % (0-100)</label>
+                                    <div class="input-wrapper">
+                                        <i class="fas fa-clock"></i>
+                                        <input type="number" id="attendance" min="0" max="100" required
+                                            placeholder="Enter percentage">
+                                    </div>
+                                </div>
+
+                                <div class="input-group">
+                                    <label for="assignment">Assignment Score (0-100)</label>
+                                    <div class="input-wrapper">
+                                        <i class="fas fa-clipboard-check"></i>
+                                        <input type="number" id="assignment" min="0" max="100" required
+                                            placeholder="Enter score">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-actions right-align">
+                                <button type="button" id="cancelBtn" class="secondary-btn">Cancel</button>
+                                <button type="submit" id="saveBtn" class="primary-btn">Save Student</button>
+                            </div>
+                        </form>
+                        <div id="message" class="message"></div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', initAdmin);
+    </script>
+</body>
+
+</html>

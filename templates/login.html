@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Student Learning System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body class="login-body">
+    <div class="login-wrapper">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="brand-logo">
+                    <i class="fas fa-graduation-cap"></i>
+                </div>
+                <h2>Welcome Back</h2>
+                <p>Please enter your details to sign in.</p>
+            </div>
+
+            <!-- Toggle Switch -->
+            <div class="toggle-container">
+                <button type="button" class="toggle-btn active" data-type="student">Student</button>
+                <button type="button" class="toggle-btn" data-type="admin">Admin</button>
+            </div>
+
+            <form id="loginForm" class="form-section">
+                <!-- Student Inputs -->
+                <div id="studentInputs" class="input-group active">
+                    <label for="studentEmail">Student Email</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="studentEmail" placeholder="name.rollno@gmail.com" required>
+                    </div>
+                    <br>
+                    <label for="studentPassword">Password</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="studentPassword" placeholder="Enter student name">
+                    </div>
+                </div>
+
+                <!-- Admin Inputs -->
+                <div id="adminInputs" class="input-group" style="display: none;">
+                    <label for="adminEmail">Email Address</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="adminEmail" placeholder="admin123@gmail.com">
+                    </div>
+                    <br>
+                    <label for="adminPassword">Password</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="adminPassword" placeholder="Enter password">
+                    </div>
+                </div>
+
+                <button type="submit" class="primary-btn">Sign In</button>
+
+                <div id="loginMessage" class="message"></div>
+            </form>
+
+            <div class="login-footer">
+                <p>&copy; 2026 Student Learning System</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', initLogin);
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Learning Measurement System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <button class="theme-toggle" title="Toggle Dark Mode">
+        <i class="fas fa-moon"></i>
+    </button>
+    <div class="container">
+        <header>
+            <h1>Student Learning Stability</h1>
+            <p>Measure and analyze student performance efficiently.</p>
+        </header>
+
+        <main>
+            <section class="input-section">
+                <h2>Enter Academic Details</h2>
+                <form id="evalForm">
+                    <div class="form-group">
+                        <label for="test_score">Test Score (%)</label>
+                        <input type="number" id="test_score" name="test_score" min="0" max="100" required
+                            placeholder="e.g., 85">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="attendance">Attendance (%)</label>
+                        <input type="number" id="attendance" name="attendance" min="0" max="100" required
+                            placeholder="e.g., 90">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="assignment">Assignment Completion (%)</label>
+                        <input type="number" id="assignment" name="assignment" min="0" max="100" required
+                            placeholder="e.g., 95">
+                    </div>
+
+                    <button type="submit" id="evaluateBtn">Evaluate Stability</button>
+                </form>
+            </section>
+
+            <section class="result-section" id="resultSection" style="display: none;">
+                <h2>Evaluation Results</h2>
+                <div class="result-card">
+                    <div class="score-box">
+                        <span class="label">Stability Score</span>
+                        <span class="value" id="scoreValue">0</span>
+                    </div>
+                    <div class="category-box">
+                        <span class="label">Learner Category</span>
+                        <span class="value" id="categoryValue">-</span>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="performanceChart"></canvas>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2026 Student Learning Measurement System</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+
+</html>
