@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>At-Risk Students - Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="admin-page">
+    <main class="main-content" style="margin: 0 auto; max-width: 1200px; padding: 32px 24px;">
+        <header class="top-header" style="position: static; border-radius: 18px;">
+            <div class="welcome-text">
+                <div class="brand" style="margin-bottom: 10px;">
+                    <img src="{{ url_for('static', filename='logo.svg') }}" alt="SVGV Student Learning System Logo">
+                    <div class="brand-text">
+                        <span class="brand-title">SVGV Matriculation Higher Secondary School</span>
+                    </div>
+                </div>
+                <h1>At-Risk Students</h1>
+                <p>Moderate and high risk students sorted alphabetically by name.</p>
+            </div>
+            <a href="/admin" class="secondary-btn" style="width:auto; padding:10px 16px; text-decoration:none;">
+                <i class="fas fa-arrow-left"></i> Back to Admin
+            </a>
+        </header>
+
+        <section class="table-card" style="margin-top: 18px;">
+            <div class="card-header">
+                <h3><i class="fas fa-triangle-exclamation"></i> Risk List</h3>
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Roll No</th>
+                            <th>Email</th>
+                            <th>Stability Score</th>
+                            <th>Risk Level</th>
+                        </tr>
+                    </thead>
+                    <tbody id="riskRows">
+                        <tr>
+                            <td colspan="6" style="text-align:center; color:#888;">Loading...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        function riskMeta(key) {
+            const normalized = String(key || '').toLowerCase();
+            if (normalized === 'stable') return { label: 'Stable', className: 'risk-stable' };
+            if (normalized === 'moderate') return { label: 'Moderate Risk', className: 'risk-moderate' };
+            return { label: 'High Risk', className: 'risk-high' };
+        }
+
+        fetch('/api/at_risk_students')
+            .then(res => {
+                if (!res.ok) throw new Error('Unauthorized');
+                return res.json();
+            })
+            .then(data => {
+                const rows = document.getElementById('riskRows');
+                if (!rows) return;
+
+                if (!Array.isArray(data) || data.length === 0) {
+                    rows.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#888;">No at-risk students found</td></tr>';
+                    return;
+                }
+
+                rows.innerHTML = '';
+                data.forEach((student, idx) => {
+                    const risk = riskMeta(student.risk_level);
+                    rows.innerHTML += `
+                        <tr>
+                            <td>#${idx + 1}</td>
+                            <td>${student.name || ''}</td>
+                            <td>${student.roll_no || ''}</td>
+                            <td>${student.email || ''}</td>
+                            <td>${student.stability_score || 0}%</td>
+                            <td><span class="risk-badge ${risk.className}">${risk.label}</span></td>
+                        </tr>
+                    `;
+                });
+            })
+            .catch(() => {
+                const rows = document.getElementById('riskRows');
+                if (!rows) return;
+                rows.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#b91c1c;">Unable to load at-risk students.</td></tr>';
+            });
+    </script>
+</body>
+
+</html>

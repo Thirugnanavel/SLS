@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faculty Portal - Student Learning System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body class="admin-page faculty-page">
+    <div class="admin-dashboard">
+        <aside class="sidebar">
+            <div class="logo-area">
+                <div class="brand">
+                    <img src="{{ url_for('static', filename='logo.svg') }}" alt="SVGV Student Learning System Logo">
+                    <div class="brand-text">
+                        <span class="brand-title">SVGV Matriculation Higher Secondary School</span>
+                    </div>
+                </div>
+            </div>
+
+            <nav>
+                <a href="#" id="facultyNavDashboard" class="active"><i class="fas fa-table-columns"></i> Dashboard</a>
+                <a href="#" id="facultyNavMarks"><i class="fas fa-pen-to-square"></i> Update Marks</a>
+                <a href="#" id="facultyNavAttendance"><i class="fas fa-user-check"></i> Manage Attendance</a>
+                <div id="facultyAssignmentsGroup" class="nav-group">
+                    <a href="#" id="facultyNavAssignments" class="nav-group-title">
+                        <span><i class="fas fa-book-open-reader"></i> Assignments</span>
+                        <i class="fas fa-chevron-down nav-caret"></i>
+                    </a>
+                    <div class="nav-submenu">
+                        <a href="#" id="facultyNavAssignmentMarks" class="nav-sub-link">
+                            <i class="fas fa-marker"></i> Assignment Marks
+                        </a>
+                        <a href="#" id="facultyNavAssignmentCreate" class="nav-sub-link">
+                            <i class="fas fa-square-plus"></i> Create Assignment
+                        </a>
+                        <a href="#" id="facultyNavAssignmentStatus" class="nav-sub-link">
+                            <i class="fas fa-list-check"></i> Submission Status
+                        </a>
+                    </div>
+                </div>
+                <a href="#" id="facultyNavAnalytics"><i class="fas fa-chart-line"></i> Performance Analytics</a>
+                <a href="#" id="facultyNavAtRisk"><i class="fas fa-triangle-exclamation"></i> At-Risk Students</a>
+                <a href="#" id="facultyNavFeedback"><i class="fas fa-comments"></i> Feedback & Remarks</a>
+                <a href="#" id="facultyNavProfile"><i class="fas fa-address-card"></i> Student Profile View</a>
+            </nav>
+
+            <div class="logout-area">
+                <a href="/logout" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-header">
+                <div class="welcome-text">
+                    <h1>Faculty Dashboard - {{ faculty_name }}</h1>
+                    <div class="faculty-meta">
+                        <span class="badge"><i class="fas fa-school"></i> Class: {{ faculty_class if faculty_class else '-' }}</span>
+                    </div>
+                    <p id="facultyHeaderSubtitle">Update marks, attendance, assignments, and remarks for students.</p>
+                </div>
+                <button class="theme-toggle" title="Toggle Dark Mode" style="position: relative; top: auto; right: auto;">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </header>
+
+            <div class="dashboard-grid">
+                <div id="facultyDashboardView" class="view-section">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="icon-box blue">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h4>Total Students</h4>
+                                <h2 id="facultyTotalStudents">0</h2>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="icon-box green">
+                                <i class="fas fa-poll"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h4>Avg Test</h4>
+                                <h2 id="facultyAvgTest">0%</h2>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="icon-box purple">
+                                <i class="fas fa-user-clock"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h4>Avg Attendance</h4>
+                                <h2 id="facultyAvgAttendance">0%</h2>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="icon-box orange">
+                                <i class="fas fa-tasks"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h4>Avg Assignment</h4>
+                                <h2 id="facultyAvgAssignment">0%</h2>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-card">
+                        <div class="card-header">
+                            <h3>Quick Summary</h3>
+                        </div>
+                        <div style="padding: 0 20px 20px;">
+                            <p style="color: var(--text-light); margin-bottom: 10px;">
+                                Logged in Faculty: <strong id="facultyDashboardName">{{ faculty_name }}</strong>
+                            </p>
+                            <p style="color: var(--text-light); margin-bottom: 8px;">Students List</p>
+                            <ul id="facultyDashboardStudentsList" class="scrolling-list">
+                                {% if students %}
+                                {% for student in students %}
+                                <li>
+                                    <span>{{ student.name }}</span>
+                                    <span>{{ student.roll_no }}</span>
+                                </li>
+                                {% endfor %}
+                                {% else %}
+                                <li style="color:#9ca3af; justify-content:center;">No students found</li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="facultyMarksView" class="view-section" style="display: none;">
+                    <div class="table-card">
+                        <div class="card-header">
+                            <h3>Update Marks</h3>
+                            <input type="text" id="facultyMarksSearch" placeholder="Search by name or roll..." class="small-search">
+                        </div>
+                        <div class="table-responsive">
+                            <table id="facultyMarksTable">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Name</th>
+                                        <th>Roll No</th>
+                                        <th>Class</th>
+                                        <th>Tamil</th>
+                                        <th>English</th>
+                                        <th>Maths</th>
+                                        <th>Science</th>
+                                        <th>Social</th>
+                                        <th>Save</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                        <div id="facultyMarksMessage" class="message"></div>
+                    </div>
+                </div>
+
+                <div id="facultyAttendanceView" class="view-section" style="display: none;">
+                    <div class="table-card">
+                        <div class="card-header">
+                            <h3>Manage Attendance</h3>
+                            <input type="text" id="facultyAttendanceSearch" placeholder="Search by name or roll..." class="small-search">
+                        </div>
+                        <div class="table-responsive">
+                            <table id="facultyAttendanceTable">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Name</th>
+                                        <th>Roll No</th>
+                                        <th>Class</th>
+                                        <th>Attendance %</th>
+                                        <th>Save</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                        <div id="facultyAttendanceMessage" class="message"></div>
+                    </div>
+                </div>
+
+                <div id="facultyAssignmentMarksView" class="view-section" style="display: none;">
+                    <div class="table-card">
+                        <div class="card-header">
+                            <h3>Assignment Marks</h3>
+                            <input type="text" id="facultyAssignmentsSearch" placeholder="Search by name or roll..." class="small-search">
+                        </div>
+                        <div class="table-responsive">
+                            <table id="facultyAssignmentsTable">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Name</th>
+                                        <th>Roll No</th>
+                                        <th>Class</th>
+                                        <th>Assignment %</th>
+                                        <th>Save</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                        <div id="facultyAssignmentsMessage" class="message"></div>
+                    </div>
+                </div>
+
+                <div id="facultyAssignmentCreateView" class="view-section" style="display: none;">
+                    <div class="form-container full-width" style="margin-bottom: 18px;">
+                        <div class="card-header">
+                            <h3>Create Assignment</h3>
+                        </div>
+                        <form id="facultyCreateAssignmentForm" class="form-grid">
+                            <div class="input-group">
+                                <label for="assignmentTitle">Title</label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-heading"></i>
+                                    <input type="text" id="assignmentTitle" placeholder="Enter assignment title" required>
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label for="assignmentDeadline">Deadline</label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-calendar-days"></i>
+                                    <input type="date" id="assignmentDeadline" required>
+                                </div>
+                            </div>
+                            <div class="input-group full-width">
+                                <label for="assignmentDescription">Description</label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-file-lines"></i>
+                                    <input type="text" id="assignmentDescription" placeholder="Enter assignment instructions">
+                                </div>
+                            </div>
+                        </form>
+                        <div class="form-actions right-align" style="justify-content:flex-start; margin-top: 8px;">
+                            <button type="button" id="createAssignmentBtn" class="primary-btn">Create Assignment</button>
+                        </div>
+                        <div id="facultyAssignmentCreateMessage" class="message"></div>
+                    </div>
+
+                    <div class="table-card">
+                        <div class="card-header">
+                            <h3>Created Assignments</h3>
+                        </div>
+                        <div class="table-responsive">
+                            <table id="facultyCreatedAssignmentsTable">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Title</th>
+                                        <th>Deadline</th>
+                                        <th>Created At</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="facultyAssignmentStatusView" class="view-section" style="display: none;">
+                    <div class="table-card">
+                        <div class="card-header">
+                            <h3>Submission Status</h3>
+                            <select id="submissionAssignmentSelect" class="small-search" style="max-width: 280px;">
+                                <option value="">Select Assignment</option>
+                            </select>
+                        </div>
+                        <div class="table-responsive">
+                            <table id="facultySubmissionStatusTable">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Name</th>
+                                        <th>Roll No</th>
+                                        <th>Status</th>
+                                        <th>Submitted File</th>
+                                        <th>Assignment Mark</th>
+                                        <th>Updated At</th>
+                                        <th>Save</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                        <div id="facultySubmissionStatusMessage" class="message"></div>
+                    </div>
+                </div>
+
+                <div id="facultyAnalyticsView" class="view-section" style="display: none;">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="icon-box blue">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h4>Total Students</h4>
+                                <h2 id="facultyTotalStudentsAnalytics">0</h2>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="icon-box green">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h4>Average Stability</h4>
+                                <h2 id="facultyAvgStability">0%</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chart-section admin-chart-grid">
+                        <div class="chart-panel">
+                            <div class="header-row">
+                                <h3>Class Performance Overview</h3>
+                            </div>
+                            <div class="chart-wrapper">
+                                <canvas id="facultyPerformanceChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="facultyAtRiskView" class="view-section" style="display: none;">
+                    <div class="table-card">
+                        <div class="card-header">
+                            <h3>At-Risk Students (Stability &lt; 70)</h3>
+                        </div>
+                        <div class="table-responsive">
+                            <table id="facultyAtRiskTable">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Name</th>
+                                        <th>Roll No</th>
+                                        <th>Class</th>
+                                        <th>Stability</th>
+                                        <th>Category</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="facultyFeedbackView" class="view-section" style="display: none;">
+                    <div class="table-card">
+                        <div class="card-header">
+                            <h3>Feedback & Remarks</h3>
+                            <input type="text" id="facultyFeedbackSearch" placeholder="Search by name or roll..." class="small-search">
+                        </div>
+                        <div class="table-responsive">
+                            <table id="facultyFeedbackTable">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Name</th>
+                                        <th>Roll No</th>
+                                        <th>Class</th>
+                                        <th>Remarks</th>
+                                        <th>Save</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                        <div id="facultyFeedbackMessage" class="message"></div>
+                    </div>
+                    <div class="table-card" style="margin-top: 12px;">
+                        <div class="card-header">
+                            <h3>Student Feedback Submissions</h3>
+                        </div>
+                        <ul id="facultyStudentFeedbackList" class="scrolling-list"></ul>
+                    </div>
+                </div>
+
+                <div id="facultyProfileView" class="view-section" style="display: none;">
+                    <div class="table-card">
+                        <div class="card-header">
+                            <h3>Student Profile View</h3>
+                            <input type="text" id="facultyProfileSearch" placeholder="Search by name or roll..." class="small-search">
+                        </div>
+                        <div class="table-responsive">
+                            <table id="facultyProfileTable">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Name</th>
+                                        <th>Roll No</th>
+                                        <th>Class</th>
+                                        <th>Email</th>
+                                        <th>Stability</th>
+                                        <th>View</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="chart-section" id="facultyProfileCard" style="display:none; margin-top: 12px;">
+                        <div class="header-row">
+                            <h3 id="facultyProfileName">Student Profile</h3>
+                        </div>
+                        <p id="facultyProfileDetails" class="recommendation-text"></p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+
+</html>

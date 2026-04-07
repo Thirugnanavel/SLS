@@ -14,47 +14,30 @@
     <div class="login-wrapper">
         <div class="login-card">
             <div class="login-header">
-                <div class="brand-logo">
-                    <i class="fas fa-graduation-cap"></i>
+                <div class="brand-center">
+                    <div class="brand">
+                        <img src="{{ url_for('static', filename='logo.svg') }}" alt="SVGV Student Learning System Logo">
+                        <div class="brand-text">
+                            <span class="brand-title">SVGV Matriculation Higher Secondary School</span>
+                        </div>
+                    </div>
                 </div>
                 <h2>Welcome Back</h2>
                 <p>Please enter your details to sign in.</p>
             </div>
 
-            <!-- Toggle Switch -->
-            <div class="toggle-container">
-                <button type="button" class="toggle-btn active" data-type="student">Student</button>
-                <button type="button" class="toggle-btn" data-type="admin">Admin</button>
-            </div>
-
             <form id="loginForm" class="form-section">
-                <!-- Student Inputs -->
-                <div id="studentInputs" class="input-group active">
-                    <label for="studentEmail">Student Email</label>
+                <div class="input-group active">
+                    <label for="loginEmail">Email</label>
                     <div class="input-wrapper">
                         <i class="fas fa-envelope"></i>
-                        <input type="email" id="studentEmail" placeholder="name.rollno@gmail.com" required>
+                        <input type="email" id="loginEmail" placeholder="Enter your Id" required>
                     </div>
                     <br>
-                    <label for="studentPassword">Password</label>
+                    <label for="loginPassword">Password</label>
                     <div class="input-wrapper">
                         <i class="fas fa-lock"></i>
-                        <input type="password" id="studentPassword" placeholder="Enter student name">
-                    </div>
-                </div>
-
-                <!-- Admin Inputs -->
-                <div id="adminInputs" class="input-group" style="display: none;">
-                    <label for="adminEmail">Email Address</label>
-                    <div class="input-wrapper">
-                        <i class="fas fa-envelope"></i>
-                        <input type="email" id="adminEmail" placeholder="admin123@gmail.com">
-                    </div>
-                    <br>
-                    <label for="adminPassword">Password</label>
-                    <div class="input-wrapper">
-                        <i class="fas fa-lock"></i>
-                        <input type="password" id="adminPassword" placeholder="Enter password">
+                        <input type="password" id="loginPassword" placeholder="Enter password" required>
                     </div>
                 </div>
 
@@ -70,9 +53,6 @@
     </div>
 
     <script src="{{ url_for('static', filename='script.js') }}"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', initLogin);
-    </script>
 </body>
 
 </html>

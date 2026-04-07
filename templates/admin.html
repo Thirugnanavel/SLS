@@ -7,21 +7,53 @@
     <title>Admin Dashboard - Student Learning System</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
-<body>
+<body class="admin-page">
     <div class="admin-dashboard">
-        <!-- Sidebar -->
         <aside class="sidebar">
             <div class="logo-area">
-                <i class="fas fa-graduation-cap"></i>
-                <h2>SLS Admin</h2>
+                <div class="brand">
+                    <img src="{{ url_for('static', filename='logo.svg') }}" alt="SVGV Student Learning System Logo">
+                    <div class="brand-text">
+                        <span class="brand-title">SVGV Matriculation Higher Secondary School</span>
+                    </div>
+                </div>
             </div>
 
             <nav>
-                <a href="#" id="navDashboard" class="active"><i class="fas fa-th-large"></i> Dashboard</a>
-                <a href="#" id="navAddStudent"><i class="fas fa-user-plus"></i> Add Student</a>
+                <div id="analyticsGroup" class="nav-group open">
+                    <a href="#" id="navAnalytics" class="nav-group-title active">
+                        <span><i class="fas fa-chart-pie"></i> Analytics</span>
+                        <i class="fas fa-chevron-down nav-caret"></i>
+                    </a>
+                    <div class="nav-submenu">
+                        <a href="#" id="navDashboard" class="nav-sub-link active">
+                            <i class="fas fa-chart-line"></i> Overview
+                        </a>
+                        <a href="#" id="navAtRisk" class="nav-sub-link">
+                            <i class="fas fa-triangle-exclamation"></i> At-Risk Students
+                        </a>
+                    </div>
+                </div>
+                <div id="userAccessGroup" class="nav-group">
+                    <a href="#" id="navUserAccess" class="nav-group-title">
+                        <span><i class="fas fa-user-gear"></i> User Access</span>
+                        <i class="fas fa-chevron-down nav-caret"></i>
+                    </a>
+                    <div class="nav-submenu">
+                        <a href="#" id="navStudentAccounts" class="nav-sub-link">
+                            <i class="fas fa-user-graduate"></i> Student Accounts
+                        </a>
+                        <a href="#" id="navFacultyAccounts" class="nav-sub-link">
+                            <i class="fas fa-chalkboard-teacher"></i> Faculty Accounts
+                        </a>
+                    </div>
+                </div>
+                <a href="#" id="navReports"><i class="fas fa-file-export"></i> Reports</a>
                 <a href="/student"><i class="fas fa-eye"></i> Student View</a>
             </nav>
 
@@ -32,25 +64,19 @@
             </div>
         </aside>
 
-        <!-- Main Content -->
         <main class="main-content">
-            <!-- Top Header -->
             <header class="top-header">
                 <div class="welcome-text">
                     <h1>Admin Dashboard</h1>
-                    <p>Manage student records and performance.</p>
+                    <p>Monitor stability analytics, user access, and report outputs.</p>
                 </div>
-                <button class="theme-toggle" title="Toggle Dark Mode"
-                    style="position: relative; top: auto; right: auto;">
+                <button class="theme-toggle" title="Toggle Dark Mode" style="position: relative; top: auto; right: auto;">
                     <i class="fas fa-moon"></i>
                 </button>
             </header>
 
             <div class="dashboard-grid">
-
-                <!-- VIEW 1: Dashboard Stats & Lists -->
                 <div id="dashboardView" class="view-section">
-                    <!-- Stats Overview -->
                     <div class="stats-grid">
                         <div class="stat-card">
                             <div class="icon-box blue">
@@ -64,168 +90,279 @@
 
                         <div class="stat-card">
                             <div class="icon-box green">
-                                <i class="fas fa-chart-line"></i>
+                                <i class="fas fa-circle-check"></i>
                             </div>
                             <div class="stat-info">
-                                <h4>High Stability</h4>
-                                <h2 id="highStabilityCount">0</h2>
+                                <h4>Stable</h4>
+                                <h2 id="stableCount">0</h2>
                             </div>
                         </div>
 
                         <div class="stat-card">
                             <div class="icon-box orange">
-                                <i class="fas fa-exclamation-triangle"></i>
+                                <i class="fas fa-triangle-exclamation"></i>
                             </div>
                             <div class="stat-info">
-                                <h4>Low Stability</h4>
-                                <h2 id="lowStabilityCount">0</h2>
+                                <h4>Moderate Risk</h4>
+                                <h2 id="moderateRiskCount">0</h2>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="icon-box red">
+                                <i class="fas fa-radiation"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h4>High Risk</h4>
+                                <h2 id="highRiskCount">0</h2>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Lists Container -->
+                    <div class="chart-section admin-chart-grid">
+                        <div class="chart-panel">
+                            <div class="header-row">
+                                <h3>Stability Trend Overview</h3>
+                            </div>
+                            <div class="chart-wrapper">
+                                <canvas id="adminTrendChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-panel">
+                            <div class="header-row">
+                                <h3>Risk Distribution</h3>
+                            </div>
+                            <div class="chart-wrapper">
+                                <canvas id="adminRiskChart"></canvas>
+                            </div>
+                            <p id="riskDistributionSummary" class="risk-summary-text"></p>
+                        </div>
+                    </div>
+
                     <div class="data-lists-container">
-                        <!-- High/Low Stability Lists (Compact) -->
                         <div class="stability-lists-grid">
                             <div class="list-card">
                                 <div class="card-header">
                                     <h4 class="text-success"><i class="fas fa-star"></i> High Stability Students</h4>
                                 </div>
-                                <ul id="highStabilityList" class="scrolling-list">
-                                    <!-- Populated by JS -->
-                                </ul>
+                                <ul id="highStabilityList" class="scrolling-list"></ul>
                             </div>
 
                             <div class="list-card">
                                 <div class="card-header">
-                                    <h4 class="text-danger"><i class="fas fa-exclamation-circle"></i> Low Stability
-                                        Students</h4>
+                                    <h4 class="text-danger"><i class="fas fa-bell"></i> At Risk Students</h4>
                                 </div>
-                                <ul id="lowStabilityList" class="scrolling-list">
-                                    <!-- Populated by JS -->
-                                </ul>
+                                <ul id="lowStabilityList" class="scrolling-list"></ul>
                             </div>
-                        </div>
-
-                        <!-- All Students Table -->
-                        <div class="table-card">
-                            <div class="card-header">
-                                <h3>All Students</h3>
-                                <input type="text" id="tableSearch" placeholder="Search..." class="small-search">
-                            </div>
-                            <div class="table-responsive">
-                                <table id="studentsTable">
-                                    <thead>
-                                        <tr>
-                                            <th>ID</th>
-                                            <th>Roll No</th>
-                                            <th>Name</th>
-                                            <th>Stability Score</th>
-                                            <th>Trend</th>
-                                            <th>Category</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <!-- Populated by JS -->
-                                    </tbody>
-                                </table>
+                            <div class="list-card">
+                                <div class="card-header">
+                                    <h4><i class="fas fa-comment-dots"></i> Student Feedback</h4>
+                                </div>
+                                <ul id="adminStudentFeedbackList" class="scrolling-list"></ul>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- VIEW 2: Add/Edit Student Form -->
-                <div id="addStudentView" class="view-section" style="display: none;">
-                    <div class="form-container full-width">
+                <div id="atRiskView" class="view-section" style="display: none;">
+                    <div class="table-card">
                         <div class="card-header">
-                            <h3><i class="fas fa-user-plus"></i> <span id="formTitle">Add New Student</span></h3>
+                            <h3>At-Risk Students (Moderate + High)</h3>
+                            <a href="/at_risk_students" class="small-search" style="text-decoration:none;">Open Full Page</a>
                         </div>
-                        <form id="adminForm">
-                            <input type="hidden" id="studentId">
+                        <div class="table-responsive">
+                            <table id="atRiskTable">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Name</th>
+                                        <th>Roll No</th>
+                                        <th>Stability Score</th>
+                                        <th>Risk Level</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="atRiskTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
 
-                            <div class="form-grid">
-                                <div class="input-group">
-                                    <label for="rollNo">Roll Number</label>
-                                    <div class="input-wrapper">
-                                        <i class="fas fa-id-badge"></i>
-                                        <input type="text" id="rollNo" required placeholder="Enter roll number">
-                                    </div>
-                                </div>
-
-                                <div class="input-group">
-                                    <label for="name">Student Name</label>
-                                    <div class="input-wrapper">
-                                        <i class="fas fa-user"></i>
-                                        <input type="text" id="name" required placeholder="Enter student name">
-                                    </div>
-                                </div>
-
-                                <div class="input-group full-width">
-                                    <label>Subject Marks (0-100)</label>
-                                    <div class="marks-grid">
-                                        <div class="input-wrapper">
-                                            <span class="input-label">Tamil</span>
-                                            <input type="number" id="tamil" min="0" max="100" required placeholder="0">
-                                        </div>
-                                        <div class="input-wrapper">
-                                            <span class="input-label">English</span>
-                                            <input type="number" id="english" min="0" max="100" required
-                                                placeholder="0">
-                                        </div>
-                                        <div class="input-wrapper">
-                                            <span class="input-label">Maths</span>
-                                            <input type="number" id="maths" min="0" max="100" required placeholder="0">
-                                        </div>
-                                        <div class="input-wrapper">
-                                            <span class="input-label">Science</span>
-                                            <input type="number" id="science" min="0" max="100" required
-                                                placeholder="0">
-                                        </div>
-                                        <div class="input-wrapper">
-                                            <span class="input-label">Social</span>
-                                            <input type="number" id="social" min="0" max="100" required placeholder="0">
-                                        </div>
-                                    </div>
-                                    <input type="hidden" id="testScore"> <!-- Calculated automatically -->
-                                </div>
-
-                                <div class="input-group">
-                                    <label for="attendance">Attendance % (0-100)</label>
-                                    <div class="input-wrapper">
-                                        <i class="fas fa-clock"></i>
-                                        <input type="number" id="attendance" min="0" max="100" required
-                                            placeholder="Enter percentage">
-                                    </div>
-                                </div>
-
-                                <div class="input-group">
-                                    <label for="assignment">Assignment Score (0-100)</label>
-                                    <div class="input-wrapper">
-                                        <i class="fas fa-clipboard-check"></i>
-                                        <input type="number" id="assignment" min="0" max="100" required
-                                            placeholder="Enter score">
-                                    </div>
+                <div id="studentAccountsView" class="view-section" style="display: none;">
+                    <div class="form-container full-width" style="margin-bottom: 18px;">
+                        <div class="card-header">
+                            <h3>Create Student</h3>
+                        </div>
+                        <form id="createStudentForm" class="form-grid">
+                            <div class="input-group">
+                                <label for="createStudentName">Student Name</label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-user"></i>
+                                    <input type="text" id="createStudentName" required placeholder="Enter student name">
                                 </div>
                             </div>
-
-                            <div class="form-actions right-align">
-                                <button type="button" id="cancelBtn" class="secondary-btn">Cancel</button>
-                                <button type="submit" id="saveBtn" class="primary-btn">Save Student</button>
+                            <div class="input-group">
+                                <label for="createStudentRoll">Roll Number</label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-id-badge"></i>
+                                    <input type="text" id="createStudentRoll" required placeholder="Enter roll number">
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label for="createStudentClass">Class / Section</label>
+                                <input type="hidden" id="createStudentClass">
+                                <div class="class-toggle" data-target="createStudentClass">
+                                    <button type="button" class="class-toggle-btn" data-value="XII - A">XII - A</button>
+                                    <button type="button" class="class-toggle-btn" data-value="XII - B">XII - B</button>
+                                    <button type="button" class="class-toggle-btn" data-value="XII - C">XII - C</button>
+                                    <button type="button" class="class-toggle-btn" data-value="XII - D">XII - D</button>
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label for="createStudentEmail">Email</label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-envelope"></i>
+                                    <input type="email" id="createStudentEmail" required placeholder="Enter email">
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label for="createStudentPassword">Password</label>
+                                <div class="input-wrapper has-toggle">
+                                    <i class="fas fa-lock"></i>
+                                    <input type="password" id="createStudentPassword" required placeholder="Enter password">
+                                    <button type="button" class="password-toggle" data-target="createStudentPassword" title="Show password">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
                             </div>
                         </form>
-                        <div id="message" class="message"></div>
+                        <div class="form-actions right-align" style="justify-content:flex-start; margin-top: 8px;">
+                            <button type="button" id="createStudentBtn" class="primary-btn">Create Student</button>
+                        </div>
+                        <div id="studentAccountMessage" class="message"></div>
                     </div>
+
+                    <div class="table-card">
+                        <div class="card-header">
+                            <h3>Student Details</h3>
+                            <input type="text" id="studentAccountSearch" placeholder="Search by name or roll..." class="small-search">
+                        </div>
+                        <div class="table-responsive">
+                            <table id="studentAccountsTable">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Name</th>
+                                        <th>Roll No</th>
+                                        <th>Class</th>
+                                        <th>Email</th>
+                                        <th>Password</th>
+                                        <th>Role</th>
+                                        <th>Account</th>
+                                        <th>Risk Level</th>
+                                        <th>Update</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div id="studentAccessMessage" class="message"></div>
                 </div>
 
+                <div id="facultyAccountsView" class="view-section" style="display: none;">
+                    <div class="form-container full-width" style="margin-bottom: 18px;">
+                        <div class="card-header">
+                            <h3>Create Faculty</h3>
+                        </div>
+                        <form id="createFacultyForm" class="form-grid">
+                            <div class="input-group">
+                                <label for="createFacultyName">Faculty Name</label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-user-tie"></i>
+                                    <input type="text" id="createFacultyName" required placeholder="Enter faculty name">
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label for="createFacultyId">Faculty ID</label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-id-card"></i>
+                                    <input type="text" id="createFacultyId" required placeholder="Enter faculty ID">
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label for="createFacultyClass">Class / Section</label>
+                                <input type="hidden" id="createFacultyClass">
+                                <div class="class-toggle" data-target="createFacultyClass">
+                                    <button type="button" class="class-toggle-btn" data-value="XII - A">XII - A</button>
+                                    <button type="button" class="class-toggle-btn" data-value="XII - B">XII - B</button>
+                                    <button type="button" class="class-toggle-btn" data-value="XII - C">XII - C</button>
+                                    <button type="button" class="class-toggle-btn" data-value="XII - D">XII - D</button>
+                                </div>
+                            </div>
+                            <div class="input-group" style="grid-column: 1 / -1;">
+                                <label>Default Faculty Login</label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-key"></i>
+                                    <input type="text" value="Email: facultyname.facultyid@gmail.com | Password: 123" readonly>
+                                </div>
+                            </div>
+                        </form>
+                        <div class="form-actions right-align" style="justify-content:flex-start; margin-top: 8px;">
+                            <button type="button" id="createFacultyBtn" class="primary-btn">Create Faculty</button>
+                        </div>
+                        <div id="facultyAccountMessage" class="message"></div>
+                    </div>
+
+                    <div class="table-card">
+                        <div class="card-header">
+                            <h3>Faculty List</h3>
+                            <input type="text" id="facultyAccountSearch" placeholder="Search by name or faculty ID..." class="small-search">
+                        </div>
+                        <div class="table-responsive">
+                            <table id="facultyAccountsTable">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Name</th>
+                                        <th>Faculty ID</th>
+                                        <th>Class</th>
+                                        <th>Email</th>
+                                        <th>Password</th>
+                                        <th>Role</th>
+                                        <th>Account</th>
+                                        <th>Update</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div id="facultyAccessMessage" class="message"></div>
+                </div>
+
+                <div id="reportsView" class="view-section" style="display: none;">
+                    <div class="form-container full-width">
+                        <div class="card-header">
+                            <h3><i class="fas fa-file-export"></i> Report Center</h3>
+                        </div>
+                        <p style="color: var(--text-light); margin-bottom: 18px;">
+                            Export current student stability analytics and account status for audit and review.
+                        </p>
+                        <div class="form-actions right-align" style="justify-content:flex-start;">
+                            <button type="button" id="downloadCsvBtn" class="primary-btn">
+                                <i class="fas fa-file-csv"></i> Download CSV
+                            </button>
+                            <button type="button" id="downloadPdfBtn" class="secondary-btn">
+                                <i class="fas fa-file-pdf"></i> Download PDF
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
 
     <script src="{{ url_for('static', filename='script.js') }}"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', initAdmin);
-    </script>
 </body>
 
 </html>

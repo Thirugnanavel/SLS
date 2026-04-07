@@ -7,20 +7,54 @@
     <title>Student View - Student Learning System</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
-<body>
+<body class="student-page">
     <div class="student-dashboard">
         <!-- Sidebar / Navigation -->
         <aside class="sidebar">
             <div class="logo-area">
-                <i class="fas fa-user-graduate"></i>
-                <h2>Student Portal</h2>
+                <div class="brand">
+                    <img src="{{ url_for('static', filename='logo.svg') }}" alt="SVGV Student Learning System Logo">
+                    <div class="brand-text">
+                        <span class="brand-title">SVGV Matriculation Higher Secondary School</span>
+                    </div>
+                </div>
             </div>
 
             <nav>
-                <a href="#" class="active"><i class="fas fa-chart-line"></i> Dashboard</a>
+                {% if dashboard_only %}
+                <a href="#" id="stuNavDashboard" class="active"><i class="fas fa-house"></i> Dashboard</a>
+                <a href="/faculty"><i class="fas fa-arrow-left"></i> Back to Faculty</a>
+                {% else %}
+                <a href="#" id="stuNavDashboard" class="active"><i class="fas fa-house"></i> Dashboard</a>
+                <div id="stuAcademicsGroup" class="nav-group">
+                    <a href="#" id="stuNavAcademics" class="nav-group-title">
+                        <span><i class="fas fa-book-open"></i> Academics</span>
+                        <i class="fas fa-chevron-down nav-caret"></i>
+                    </a>
+                    <div class="nav-submenu">
+                        <a href="#" id="stuNavAttendance" class="nav-sub-link"><i class="fas fa-calendar-check"></i> Attendance Record</a>
+                        <a href="#" id="stuNavAssignments" class="nav-sub-link"><i class="fas fa-pen"></i> Assignments</a>
+                        <a href="#" id="stuNavCurrentScores" class="nav-sub-link"><i class="fas fa-gauge"></i> Current Scores</a>
+                        <a href="#" id="stuNavStability" class="nav-sub-link"><i class="fas fa-chart-line"></i> Stability Analysis</a>
+                    </div>
+                </div>
+                <div id="stuReportsGroup" class="nav-group">
+                    <a href="#" id="stuNavReports" class="nav-group-title">
+                        <span><i class="fas fa-chart-pie"></i> Reports</span>
+                        <i class="fas fa-chevron-down nav-caret"></i>
+                    </a>
+                    <div class="nav-submenu">
+                        <a href="#" id="stuNavComparison" class="nav-sub-link"><i class="fas fa-code-compare"></i> Comparison Report</a>
+                        <a href="#" id="stuNavFeedback" class="nav-sub-link"><i class="fas fa-comment-dots"></i> Feedback</a>
+                        <a href="#" id="stuNavDownload" class="nav-sub-link"><i class="fas fa-file-pdf"></i> Download Reports (PDF)</a>
+                    </div>
+                </div>
+                {% endif %}
             </nav>
 
             <div class="logout-area">
@@ -58,6 +92,7 @@
                 </button>
             </header>
 
+            <div id="studentDashboardView" class="view-section">
             <!-- Dashboard Content -->
             <div id="dashboardContent" class="dashboard-grid fade-in">
                 <!-- Empty State / Welcome -->
@@ -122,7 +157,11 @@
                                 <h2 id="studentNameDisplay">Student Name</h2>
                                 <span id="dispCategory" class="category-badge">Category</span>
                             </div>
+                            <span id="studentClassDisplay" class="header-subtitle">Class: -</span>
                         </div>
+                        <button type="button" id="downloadStudentPdfBtn" class="download-report-btn" title="Download PDF Report">
+                            <i class="fas fa-file-pdf"></i> PDF
+                        </button>
                     </div>
 
                     <!-- Stats Cards -->
@@ -192,90 +231,155 @@
                             <canvas id="performanceChart"></canvas>
                         </div>
                     </div>
+
+                    <div id="remarksSection" class="chart-section" style="display: none;">
+                        <div class="header-row">
+                            <h3>Faculty Remarks</h3>
+                        </div>
+                        <p id="facultyRemarksText" class="recommendation-text"></p>
+                    </div>
                 </div>
             </div>
 
-            <!-- Previous Stability Comparison Section -->
-            <div id="comparisonSection" class="history-section" style="display: none;">
-                <h3 class="section-title">Previous Stability Comparison</h3>
+            </div>
+
+            <div id="studentAttendanceView" class="view-section" style="display:none;">
+                <div class="table-card">
+                    <div class="card-header">
+                        <h3>Attendance Record</h3>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr><th>Name</th><th>Roll No</th><th>Class</th><th>Attendance</th><th>Updated By Faculty</th></tr>
+                            </thead>
+                            <tbody id="stuAttendanceBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="studentAssignmentsView" class="view-section" style="display:none;">
+                <div class="table-card">
+                    <div class="card-header">
+                        <h3>Assignments</h3>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Title</th>
+                                    <th>Deadline</th>
+                                    <th>Status</th>
+                                    <th>PDF</th>
+                                    <th>Submit</th>
+                                    <th>Assignment Mark</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stuAssignmentsBody"></tbody>
+                        </table>
+                    </div>
+                    <div id="stuAssignmentsMsg" class="message"></div>
+                </div>
+            </div>
+
+            <div id="studentCurrentScoresView" class="view-section" style="display:none;">
+                <div class="stats-grid">
+                    <div class="stat-card"><div class="icon-box green"><i class="fas fa-poll"></i></div><div class="stat-info"><h4>Test Score</h4><h2 id="stuCurrTest">0%</h2></div></div>
+                    <div class="stat-card"><div class="icon-box purple"><i class="fas fa-user-clock"></i></div><div class="stat-info"><h4>Attendance</h4><h2 id="stuCurrAttendance">0%</h2></div></div>
+                    <div class="stat-card"><div class="icon-box orange"><i class="fas fa-tasks"></i></div><div class="stat-info"><h4>Assignment</h4><h2 id="stuCurrAssignment">0%</h2></div></div>
+                    <div class="stat-card"><div class="icon-box blue"><i class="fas fa-balance-scale"></i></div><div class="stat-info"><h4>Stability</h4><h2 id="stuCurrStability">0%</h2></div></div>
+                </div>
+                <div class="table-card" style="margin-top: 14px;">
+                    <div class="card-header"><h3>Subject Score Sheet</h3></div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr><th>Subject</th><th>Score</th><th>Status</th></tr>
+                            </thead>
+                            <tbody id="stuSubjectScoresBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="studentStabilityView" class="view-section" style="display:none;">
+                <div class="stats-grid">
+                    <div class="stat-card"><div class="icon-box blue"><i class="fas fa-balance-scale"></i></div><div class="stat-info"><h4>Current Stability</h4><h2 id="stuStabilityCurrent">0%</h2></div></div>
+                    <div class="stat-card"><div class="icon-box purple"><i class="fas fa-clock-rotate-left"></i></div><div class="stat-info"><h4>Previous Stability</h4><h2 id="stuStabilityPrevious">0%</h2></div></div>
+                    <div class="stat-card"><div class="icon-box green"><i class="fas fa-arrow-trend-up"></i></div><div class="stat-info"><h4>Trend Change</h4><h2 id="stuStabilityDiff">0%</h2></div></div>
+                </div>
+                <div class="chart-section admin-chart-grid" style="margin-top: 14px;">
+                    <div class="chart-panel">
+                        <div class="header-row"><h3>Stability Breakdown</h3></div>
+                        <div class="chart-wrapper"><canvas id="stuStabilityRadarChart"></canvas></div>
+                    </div>
+                    <div class="chart-panel">
+                        <div class="header-row"><h3>Stability Timeline</h3></div>
+                        <div class="chart-wrapper"><canvas id="stuStabilityTrendChart"></canvas></div>
+                    </div>
+                </div>
+                <p id="stuStabilityText" class="recommendation-text"></p>
+            </div>
+
+            <div id="studentComparisonView" class="view-section" style="display:none;">
+                <h3 class="section-title">Comparison Report</h3>
                 <div class="history-grid">
-                    <!-- Metrics Column -->
                     <div class="metrics-column">
-                        <!-- Stability Comparison -->
                         <div class="comparison-card type-stability">
-                            <div class="comp-header">
-                                <div class="comp-icon-box">
-                                    <i class="fas fa-balance-scale"></i>
-                                </div>
-                                <span>Stability Score</span>
-                            </div>
+                            <div class="comp-header"><div class="comp-icon-box"><i class="fas fa-balance-scale"></i></div><span>Stability Score</span></div>
                             <div class="comp-body">
-                                <div class="comp-item">
-                                    <small>Previous</small>
-                                    <span id="prevStability">0%</span>
-                                </div>
-                                <div class="comp-divider">
-                                    <i class="fas fa-arrow-right"></i>
-                                </div>
-                                <div class="comp-item highlight">
-                                    <small>Current</small>
-                                    <span id="currStability">0%</span>
-                                </div>
+                                <div class="comp-item"><small>Previous</small><span id="prevStability">0%</span></div>
+                                <div class="comp-divider"><i class="fas fa-arrow-right"></i></div>
+                                <div class="comp-item highlight"><small>Current</small><span id="currStability">0%</span></div>
                             </div>
                         </div>
-
-                        <!-- Test Score Comparison -->
                         <div class="comparison-card type-test">
-                            <div class="comp-header">
-                                <div class="comp-icon-box">
-                                    <i class="fas fa-poll"></i>
-                                </div>
-                                <span>Test Score</span>
-                            </div>
+                            <div class="comp-header"><div class="comp-icon-box"><i class="fas fa-poll"></i></div><span>Test Score</span></div>
                             <div class="comp-body">
-                                <div class="comp-item">
-                                    <small>Previous</small>
-                                    <span id="prevTest">0%</span>
-                                </div>
-                                <div class="comp-divider">
-                                    <i class="fas fa-arrow-right"></i>
-                                </div>
-                                <div class="comp-item highlight">
-                                    <small>Current</small>
-                                    <span id="currTest">0%</span>
-                                </div>
+                                <div class="comp-item"><small>Previous</small><span id="prevTest">0%</span></div>
+                                <div class="comp-divider"><i class="fas fa-arrow-right"></i></div>
+                                <div class="comp-item highlight"><small>Current</small><span id="currTest">0%</span></div>
                             </div>
                         </div>
-
-                        <!-- Assignment Comparison -->
                         <div class="comparison-card type-assignment">
-                            <div class="comp-header">
-                                <div class="comp-icon-box">
-                                    <i class="fas fa-tasks"></i>
-                                </div>
-                                <span>Assignment</span>
-                            </div>
+                            <div class="comp-header"><div class="comp-icon-box"><i class="fas fa-tasks"></i></div><span>Assignment</span></div>
                             <div class="comp-body">
-                                <div class="comp-item">
-                                    <small>Previous</small>
-                                    <span id="prevAssignment">0%</span>
-                                </div>
-                                <div class="comp-divider">
-                                    <i class="fas fa-arrow-right"></i>
-                                </div>
-                                <div class="comp-item highlight">
-                                    <small>Current</small>
-                                    <span id="currAssignment">0%</span>
-                                </div>
+                                <div class="comp-item"><small>Previous</small><span id="prevAssignment">0%</span></div>
+                                <div class="comp-divider"><i class="fas fa-arrow-right"></i></div>
+                                <div class="comp-item highlight"><small>Current</small><span id="currAssignment">0%</span></div>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Chart Column -->
                     <div class="chart-column">
-                        <div class="chart-wrapper">
-                            <canvas id="comparisonChart"></canvas>
+                        <div class="chart-wrapper"><canvas id="comparisonChart"></canvas></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="studentFeedbackView" class="view-section" style="display:none;">
+                <div class="form-container full-width">
+                    <div class="card-header"><h3>Feedback</h3></div>
+                    <div class="input-group">
+                        <label for="stuFeedbackInput">Share your feedback</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-comment"></i>
+                            <input type="text" id="stuFeedbackInput" placeholder="Type your feedback">
                         </div>
+                    </div>
+                    <div class="form-actions right-align" style="justify-content:flex-start; margin-top: 12px;">
+                        <button type="button" id="stuSubmitFeedbackBtn" class="primary-btn">Submit Feedback</button>
+                    </div>
+                    <div id="stuFeedbackMsg" class="message"></div>
+                </div>
+            </div>
+
+            <div id="studentDownloadView" class="view-section" style="display:none;">
+                <div class="form-container full-width">
+                    <div class="card-header"><h3>Download Reports (PDF)</h3></div>
+                    <div class="form-actions right-align" style="justify-content:flex-start;">
+                        <button type="button" id="stuDownloadPdfBtn" class="secondary-btn"><i class="fas fa-file-pdf"></i> Download Current Report</button>
                     </div>
                 </div>
             </div>
@@ -290,14 +394,12 @@
     <script>
         window.currentUser = {
             type: "{{ user_type }}",
-            id: "{{ user_id }}"
+            id: "{{ user_id }}",
+            targetStudentId: "{{ target_student_id if target_student_id is not none else '' }}"
         };
     </script>
 
     <script src="{{ url_for('static', filename='script.js') }}"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', initStudent);
-    </script>
 </body>
 
 </html>
