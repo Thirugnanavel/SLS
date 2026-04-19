@@ -60,6 +60,15 @@
 
         <main class="main-content">
             <header class="top-header">
+                {% if db_unavailable %}
+                <div class="message error" role="alert" style="margin: 0 0 1rem 0; max-width: none;">
+                    <strong>Database offline.</strong> Could not reach MongoDB at <code>127.0.0.1:27017</code>.
+                    Start the MongoDB service, then refresh.
+                    {% if mongo_error_detail %}
+                    <br><small style="opacity:0.95;">Detail: {{ mongo_error_detail }}</small>
+                    {% endif %}
+                </div>
+                {% endif %}
                 <div class="welcome-text">
                     <h1>Faculty Dashboard - {{ faculty_name }}</h1>
                     <div class="faculty-meta">

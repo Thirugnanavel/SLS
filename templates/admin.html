@@ -75,6 +75,17 @@
                 </button>
             </header>
 
+            {% if db_unavailable %}
+            <div class="message error" role="alert" style="margin: 0 0 1rem 0; max-width: none;">
+                <strong>Database offline.</strong> The app could not read from MongoDB (default <code>127.0.0.1:27017</code>).
+                Start the <strong>MongoDB</strong> Windows service or run <code>mongod</code>, then refresh.
+                {% if mongo_error_detail %}
+                <br><small style="opacity:0.95;">Detail: {{ mongo_error_detail }}</small>
+                {% endif %}
+                <br><small>If you set <code>MONGO_URI</code> in PowerShell to a fake Atlas string, clear it: <code>$env:MONGO_URI = $null</code></small>
+            </div>
+            {% endif %}
+
             <div class="dashboard-grid">
                 <div id="dashboardView" class="view-section">
                     <div class="stats-grid">

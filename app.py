@@ -1,5 +1,6 @@
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for, Response
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for, Response, g, has_request_context
 from pymongo import MongoClient
+from pymongo.errors import PyMongoError, ConfigurationError
 import secrets
 import csv
 from io import StringIO
@@ -8,12 +9,41 @@ import os
 import uuid
 from werkzeug.utils import secure_filename
 import re
-
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
 
-client = MongoClient('mongodb://localhost:27017/')
-db = client['student_learning_system']
+# Use 127.0.0.1 (not "localhost") on Windows so PyMongo matches IPv4 where mongod listens;
+# "localhost" can resolve to ::1 first and fail while MongoDB Compass still connects.
+MONGO_URI = os.environ.get('MONGO_URI', 'mongodb://127.0.0.1:27017/')
+# Default DB for this app; override if your data lives elsewhere (e.g. virtual-academic-analyzer in Compass).
+MONGO_DB_NAME = os.environ.get('MONGO_DB_NAME', 'student_learning_system')
+
+try:
+    client = MongoClient(
+        MONGO_URI,
+        serverSelectionTimeoutMS=5000,
+        connectTimeoutMS=5000,
+    )
+    db = client[MONGO_DB_NAME]
+except ConfigurationError as e:
+    print("\n[SLS] Invalid MONGO_URI — PyMongo could not parse the connection string.")
+    print("    If you used a placeholder like mongodb+srv://USER:PASS@cluster... that will fail.")
+    print("    For local MongoDB on this PC, clear the variable and use defaults:")
+    print('    $env:MONGO_URI = $null')
+    print("    Then install/start MongoDB so it listens on 127.0.0.1:27017.\n")
+    raise SystemExit(1) from e
+
+def _mongo_startup_check():
+    try:
+        client.admin.command('ping')
+        print(f'[SLS] MongoDB OK — using database "{MONGO_DB_NAME}"')
+    except PyMongoError as e:
+        hint = str(e).strip().split('\n')[0][:220]
+        print(f'[SLS] MongoDB not reachable: {hint}')
+        print('    → Start the MongoDB Windows service, or run mongod listening on 127.0.0.1:27017')
+        print('    → If MONGO_URI is wrong, run: $env:MONGO_URI = $null  then python app.py again\n')
+
+_mongo_startup_check()
 
 UPLOAD_FOLDER = os.path.join(app.root_path, 'static', 'uploads', 'assignments')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -75,8 +105,17 @@ def sort_students_by_name(students):
     )
 
 def student_records_for_analytics():
-    records = list(db.student.find({'$or': [{'user_role': 'student'}, {'user_role': {'$exists': False}}]}))
-    return sort_students_by_name(records)
+    try:
+        records = list(db.student.find({'$or': [{'user_role': 'student'}, {'user_role': {'$exists': False}}]}))
+        if has_request_context():
+            g.db_unavailable = False
+            g.mongo_error_detail = ''
+        return sort_students_by_name(records)
+    except PyMongoError as e:
+        if has_request_context():
+            g.db_unavailable = True
+            g.mongo_error_detail = (str(e).strip().split('\n')[0])[:400]
+        return []
 
 def build_risk_summary(students):
     total_students = len(students)
@@ -112,58 +151,67 @@ def login_api():
     email = (data.get('email') or '').strip().lower()
     password = (data.get('password') or '').strip()
 
-    if email == 'admin123@gmail.com' and password == 'Admin1':
+    # Demo admin: "admin1" or "admin" (case-insensitive for admin1)
+    if email == 'admin123@gmail.com' and (
+        password.lower() == 'admin1' or password.lower() == 'admin'
+    ):
         session['user_type'] = 'admin'
         session['user'] = 'Admin'
         return jsonify({'status': 'success', 'redirect': '/admin'})
 
-    account = db.student.find_one({'email': re.compile(f'^{email}$', re.I)})
-    if account:
-        if account.get('is_active') is False:
-            return jsonify({'status': 'error', 'message': 'Account is deactivated. Contact admin.'})
+    try:
+        account = db.student.find_one({'email': re.compile(f'^{re.escape(email)}$', re.I)})
+        if account:
+            if account.get('is_active') is False:
+                return jsonify({'status': 'error', 'message': 'Account is deactivated. Contact admin.'})
 
-        role = account.get('user_role') if account.get('user_role') in ['admin', 'faculty', 'student'] else 'student'
-        name_token = (account.get('name') or '').strip().lower().split(' ')[0]
-        email_token = (account.get('email') or '').strip().lower().split('@')[0].split('.')[0]
+            role = account.get('user_role') if account.get('user_role') in ['admin', 'faculty', 'student'] else 'student'
+            name_token = (account.get('name') or '').strip().lower().split(' ')[0]
+            email_token = (account.get('email') or '').strip().lower().split('@')[0].split('.')[0]
 
-        valid = False
-        if role == 'faculty':
-            expected_email = _faculty_email(account.get('name'), account.get('faculty_id') or account.get('roll_no'))
-            valid = (email == expected_email and password == '123')
-        else:
-            if account.get('password'):
-                valid = (password == account.get('password'))
+            valid = False
+            if role == 'faculty':
+                expected_email = _faculty_email(account.get('name'), account.get('faculty_id') or account.get('roll_no'))
+                valid = (email == expected_email and password == '123')
             else:
-                valid = (password.lower() == name_token or password.lower() == email_token)
+                if account.get('password'):
+                    valid = (password == account.get('password'))
+                else:
+                    valid = (password.lower() == name_token or password.lower() == email_token)
 
-        if valid:
-            session['user_type'] = role
-            session['user_id'] = account.get('id')
-            session['user_name'] = account.get('name')
-            session['user_roll'] = account.get('roll_no')
-            if role == 'admin': return jsonify({'status': 'success', 'redirect': '/admin'})
-            if role == 'faculty': return jsonify({'status': 'success', 'redirect': '/faculty'})
-            return jsonify({'status': 'success', 'redirect': '/student'})
+            if valid:
+                session['user_type'] = role
+                session['user_id'] = account.get('id')
+                session['user_name'] = account.get('name')
+                session['user_roll'] = account.get('roll_no')
+                if role == 'admin': return jsonify({'status': 'success', 'redirect': '/admin'})
+                if role == 'faculty': return jsonify({'status': 'success', 'redirect': '/faculty'})
+                return jsonify({'status': 'success', 'redirect': '/student'})
 
-    if email.endswith('@gmail.com'):
-        try:
-            local_part = email.split('@')[0]
-            parts = local_part.rsplit('.', 1)
-            if len(parts) == 2:
-                name_part, roll_part = parts[0], parts[1]
-                student = db.student.find_one({'roll_no': roll_part})
-                if student and (student.get('is_active') is not False):
-                    stored_name = (student.get('name') or '').strip().lower()
-                    if password.lower() in [name_part.lower(), stored_name.split(' ')[0]]:
-                        session['user_type'] = 'student'
-                        session['user_id'] = student.get('id')
-                        session['user_name'] = student.get('name')
-                        session['user_roll'] = student.get('roll_no')
-                        return jsonify({'status': 'success', 'redirect': '/student'})
-        except Exception:
-            pass
+        if email.endswith('@gmail.com'):
+            try:
+                local_part = email.split('@')[0]
+                parts = local_part.rsplit('.', 1)
+                if len(parts) == 2:
+                    name_part, roll_part = parts[0], parts[1]
+                    student = db.student.find_one({'roll_no': roll_part})
+                    if student and (student.get('is_active') is not False):
+                        stored_name = (student.get('name') or '').strip().lower()
+                        if password.lower() in [name_part.lower(), stored_name.split(' ')[0]]:
+                            session['user_type'] = 'student'
+                            session['user_id'] = student.get('id')
+                            session['user_name'] = student.get('name')
+                            session['user_roll'] = student.get('roll_no')
+                            return jsonify({'status': 'success', 'redirect': '/student'})
+            except Exception:
+                pass
 
-    return jsonify({'status': 'error', 'message': 'Invalid credentials'})
+        return jsonify({'status': 'error', 'message': 'Invalid credentials'})
+    except PyMongoError:
+        return jsonify({
+            'status': 'error',
+            'message': 'Cannot reach the database. Start MongoDB on this machine, then try again.',
+        }), 503
 
 @app.route('/logout')
 def logout():
@@ -180,7 +228,14 @@ def admin():
         return redirect(url_for('login_page'))
     students = student_records_for_analytics()
     summary = build_risk_summary(students)
-    return render_template('admin.html', risk_summary=summary)
+    db_unavailable = getattr(g, 'db_unavailable', False)
+    mongo_error_detail = getattr(g, 'mongo_error_detail', '') or ''
+    return render_template(
+        'admin.html',
+        risk_summary=summary,
+        db_unavailable=db_unavailable,
+        mongo_error_detail=mongo_error_detail,
+    )
 
 @app.route('/faculty')
 def faculty():
@@ -191,15 +246,22 @@ def faculty():
     faculty_class = ''
     faculty_id = session.get('user_id')
     if faculty_id:
-        faculty_account = db.student.find_one({'id': faculty_id})
-        if faculty_account:
-            faculty_class = faculty_account.get('class_name') or ''
+        try:
+            faculty_account = db.student.find_one({'id': faculty_id})
+            if faculty_account:
+                faculty_class = faculty_account.get('class_name') or ''
+        except PyMongoError:
+            g.db_unavailable = True
+    db_unavailable = getattr(g, 'db_unavailable', False)
+    mongo_error_detail = getattr(g, 'mongo_error_detail', '') or ''
     return render_template(
         'faculty.html',
         risk_summary=summary,
         faculty_name=session.get('user_name', 'Faculty'),
         students=students,
-        faculty_class=faculty_class
+        faculty_class=faculty_class,
+        db_unavailable=db_unavailable,
+        mongo_error_detail=mongo_error_detail,
     )
 
 @app.route('/at_risk_students')

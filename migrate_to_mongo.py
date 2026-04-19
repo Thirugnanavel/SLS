@@ -1,3 +1,4 @@
+import os
 import sqlite3
 import pymongo
 
@@ -7,9 +8,9 @@ def migrate():
     sqlite_conn.row_factory = sqlite3.Row
     cursor = sqlite_conn.cursor()
 
-    # Connect to MongoDB
-    mongo_client = pymongo.MongoClient('mongodb://localhost:27017/')
-    db = mongo_client['student_learning_system']
+    # Connect to MongoDB (match app.py: MONGO_URI / MONGO_DB_NAME)
+    mongo_client = pymongo.MongoClient(os.environ.get('MONGO_URI', 'mongodb://127.0.0.1:27017/'))
+    db = mongo_client[os.environ.get('MONGO_DB_NAME', 'student_learning_system')]
 
     # Clear existing collections
     db.student.drop()

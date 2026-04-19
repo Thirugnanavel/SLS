@@ -84,37 +84,65 @@ function initLogin() {
     form.addEventListener('submit', function (e) {
         e.preventDefault();
         const email = emailInput.value.trim();
-        const password = passwordInput.value.trim();
+        const password = passwordInput.value;
 
-        if (!email || !password) {
+        if (!email || !password.trim()) {
             showMessage(messageDiv, 'Please fill in all fields', 'error');
             return;
         }
+
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) submitBtn.disabled = true;
 
         messageDiv.textContent = 'Signing in...';
         messageDiv.className = 'message';
         messageDiv.style.display = 'block';
 
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 25000);
+
         fetch('/api/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: email, password: password })
+            body: JSON.stringify({ email: email, password: password.trim() }),
+            credentials: 'same-origin',
+            signal: controller.signal
         })
-            .then(res => res.json())
+            .then(async (res) => {
+                const text = await res.text();
+                let data;
+                try {
+                    data = text ? JSON.parse(text) : {};
+                } catch {
+                    throw new Error('bad_json');
+                }
+                if (!res.ok && (!data || !data.message)) {
+                    throw new Error('http_' + res.status);
+                }
+                return data;
+            })
             .then(data => {
+                clearTimeout(timeoutId);
                 if (data.status === 'success') {
-                    // Update theme based on saved preference or default
-                    // initTheme(); // already called on load
                     showMessage(messageDiv, 'Login successful! Redirecting...', 'success');
                     setTimeout(() => {
-                        window.location.href = data.redirect;
-                    }, 1000);
+                        window.location.href = data.redirect || '/';
+                    }, 800);
                 } else {
-                    showMessage(messageDiv, data.message, 'error');
+                    if (submitBtn) submitBtn.disabled = false;
+                    showMessage(messageDiv, data.message || 'Login failed', 'error');
                 }
             })
             .catch(err => {
-                showMessage(messageDiv, 'Connection error', 'error');
+                clearTimeout(timeoutId);
+                if (submitBtn) submitBtn.disabled = false;
+                if (err && err.name === 'AbortError') {
+                    showMessage(messageDiv, 'Request timed out. Check that the app server is running.', 'error');
+                } else if (err && err.message === 'bad_json') {
+                    showMessage(messageDiv, 'Server returned an invalid response. Is the Flask app running?', 'error');
+                } else {
+                    showMessage(messageDiv, 'Connection error. Is the server running at this address?', 'error');
+                }
             });
     });
 }

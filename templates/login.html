@@ -28,16 +28,18 @@
 
             <form id="loginForm" class="form-section">
                 <div class="input-group active">
-                    <label for="loginEmail">Email</label>
+                    <label for="loginEmail">Email or school ID</label>
                     <div class="input-wrapper">
                         <i class="fas fa-envelope"></i>
-                        <input type="email" id="loginEmail" placeholder="Enter your Id" required>
+                        <input type="text" id="loginEmail" name="email" autocomplete="username"
+                            placeholder="e.g. admin123@gmail.com" required>
                     </div>
                     <br>
                     <label for="loginPassword">Password</label>
                     <div class="input-wrapper">
                         <i class="fas fa-lock"></i>
-                        <input type="password" id="loginPassword" placeholder="Enter password" required>
+                        <input type="password" id="loginPassword" name="password" autocomplete="current-password"
+                            placeholder="Demo admin: admin or admin1" required>
                     </div>
                 </div>
 
