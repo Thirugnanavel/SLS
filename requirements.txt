@@ -1,2 +1,1 @@
-flask
-pymongo
+-r backend/requirements.txt

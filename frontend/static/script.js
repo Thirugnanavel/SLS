@@ -1647,18 +1647,7 @@ function initIndex() {
             return;
         }
 
-        // Prepare data
-        const payload = {
-            test_score: testScore,
-            attendance: attendance,
-            assignment: assignment
-        };
-
-        // Send to backend (using original endpoint or handling locally if endpoint removed)
-        // Original endpoint /evaluate was removed in new app.py, so we calculate locally or mock it.
-        // Wait, I replaced app.py content, so /evaluate is GONE.
-        // I should probably restore /evaluate OR just do client-side calc for demo.
-        // Let's do client-side calc for the index page to avoid 404s since I removed the route.
+        // Stability is calculated client-side for this page.
 
         // Stability Score Calculation (Average)
         let stability_score = (testScore + attendance + assignment) / 3;
